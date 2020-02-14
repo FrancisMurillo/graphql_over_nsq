@@ -1,7 +1,7 @@
-defmodule AccountService.Broker do
-  use Conduit.Broker, otp_app: :account_service
+defmodule ApiGateway.Broker do
+  use Conduit.Broker, otp_app: :api_gateway
 
-  @channel "account_service"
+  @channel "api_gateway"
 
   pipeline :serialize do
     plug(Conduit.Plug.Wrap)
@@ -15,16 +15,17 @@ defmodule AccountService.Broker do
 
   configure do
     queue("account_graphql_request")
-    queue("account_graphql_response")
+    queue("billing_graphql_request")
+    queue("product_graphql_request")
   end
 
-  incoming AccountService do
+  incoming ApiGateway do
     pipe_through([:deserialize])
 
     subscribe(
-      :graphql_request,
-      GraphQLRequest,
-      topic: "account_graphql_request",
+      :account_graphql_response,
+      AccountGraphQLResponse,
+      topic: "account_graphql_response",
       channel: @channel
     )
   end
@@ -32,6 +33,6 @@ defmodule AccountService.Broker do
   outgoing do
     pipe_through([:serialize])
 
-    publish(:graphql_response, topic: "account_graphql_response")
+    publish(:account_graphql_request, topic: "account_graphql_request")
   end
 end

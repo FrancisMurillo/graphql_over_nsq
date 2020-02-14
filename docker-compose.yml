@@ -47,9 +47,32 @@ services:
       DB_PASS: "mq_pass"
       DB_NAME: "mq_db"
       NSQ_HOST: "nsq:14150"
+  api_gateway:
+    build:
+      context: ./api_gateway
+      dockerfile: Dockerfile
+    command: "mix phx.server"
+    entrypoint: /opt/app/api_gateway/docker-entrypoint.sh
+    volumes:
+      - ./api_gateway:/opt/app/api_gateway
+      - api_mix_build:/opt/app/_build
+      - api_rebar_cache:/opt/app/.cache
+      - api_mix_deps:/opt/app/api_gateway/deps
+    ports:
+      - "14000:14000"
+    depends_on:
+      - nsq
+    links:
+      - nsq:nsq
+    environment:
+      NSQ_HOST: "nsq:14150"
+
 
 volumes:
   db:
   account_mix_deps:
   account_mix_build:
   account_rebar_cache:
+  api_mix_deps:
+  api_mix_build:
+  api_rebar_cache:
