@@ -1,4 +1,0 @@
-# GraphqlOverNsq
-
-**TODO: Add description**
-

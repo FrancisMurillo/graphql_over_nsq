@@ -1,0 +1,55 @@
+version: '3.1'
+services:
+  nsq:
+    image: nsqio/nsq:v1.2.0
+    command: >
+      /nsqd --broadcast-address=nsq
+      --tcp-address=0.0.0.0:14150
+      --http-address=0.0.0.0:14151
+    logging:
+      driver: none
+    ports:
+      - "14150:14150"
+      - "14151:14151"
+  db:
+    image: postgres:9.5.17-alpine
+    logging:
+      driver: none
+    ports:
+      - "14432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "mq_user"
+      POSTGRES_PASSWORD: "mq_pass"
+      POSTGRES_DB: "mq_db"
+  account_service:
+    build:
+      context: ./account_service
+      dockerfile: Dockerfile
+    command: "mix run --no-halt"
+    entrypoint: /opt/app/account_service/docker-entrypoint.sh
+    volumes:
+      - ./account_service:/opt/app/account_service
+      - account_mix_build:/opt/app/_build
+      - account_rebar_cache:/opt/app/.cache
+      - account_mix_deps:/opt/app/account_service/deps
+    depends_on:
+      - db
+      - nsq
+    links:
+      - nsq:nsq
+      - db:db
+    environment:
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_USER: "mq_user"
+      DB_PASS: "mq_pass"
+      DB_NAME: "mq_db"
+      NSQ_HOST: "nsq:14150"
+
+volumes:
+  db:
+  account_mix_deps:
+  account_mix_build:
+  account_rebar_cache:
