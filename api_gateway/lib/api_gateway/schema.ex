@@ -1,10 +1,19 @@
 defmodule ApiGateway.Schema do
   use Absinthe.Schema
+  use Absinthe.Relay.Schema, :modern
 
   alias Absinthe.{Middleware, Resolution}
   alias Absinthe.Blueprint.Document.Field
 
   alias ApiGateway.{AccountClient}
+
+  object :field_error do
+    description("An user-readable error")
+
+    field(:field, non_null(:string), description: "Error field")
+
+    field(:message, non_null(:string), description: "Error description")
+  end
 
   object :user do
     description("Users of this wonderful platform")
@@ -58,17 +67,64 @@ defmodule ApiGateway.Schema do
 
   query do
     field :users, non_null(list_of(non_null(:user))) do
-      resolve(fn _, _, context ->
+      resolve(fn _, _, res ->
         AccountClient.run("""
         query {
           users {
-        #{to_field_query(context.definition.selections)}
+        #{to_field_query(res.definition.selections)}
           }
         }
         """)
         |> case do
           {:ok, %{"data" => %{"users" => users}}} ->
             {:ok, users}
+
+          error ->
+            error
+        end
+      end)
+    end
+  end
+
+  mutation do
+    payload field(:register_user) do
+      description("Register user")
+
+      input do
+        field(:first_name, non_null(:string), description: "First name of the user")
+
+        field(:last_name, non_null(:string), description: "Last name of the user")
+
+        field(:email, non_null(:string), description: "User's email")
+      end
+
+      output do
+        field(:user, :user, description: "Newly created user")
+
+        field(:errors, non_null(list_of(non_null(:field_error))), description: "Mutation errors")
+      end
+
+      resolve(fn _, args, res ->
+        AccountClient.run(
+          """
+          mutation($email: String!, $first_name: String!, $last_name: String!) {
+            registerUser(
+              input: {
+                email: $email,
+                firstName: $first_name,
+                lastName: $last_name
+              }
+            ) {
+          #{to_field_query(res.definition.selections)}
+            }
+          }
+          """,
+          args
+        )
+        |> IO.inspect(label: "RA")
+        |> case do
+          {:ok, %{"data" => %{"registerUser" => register_user}}} ->
+            {:ok, register_user}
 
           error ->
             error

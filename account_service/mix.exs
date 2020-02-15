@@ -30,6 +30,7 @@ defmodule AccountService.MixProject do
       {:conduit_nsq, "~> 0.1.4"},
       {:conduit, "~> 0.12.10"},
       {:absinthe, "~> 1.4.0"},
+      {:absinthe_relay, "~> 1.4.0"},
       {:ex_machina, "~> 2.3.0"},
       {:faker, "~> 0.13.0"}
     ]
@@ -38,7 +39,8 @@ defmodule AccountService.MixProject do
   defp aliases do
     [
       "ecto.seed": "run priv/repo/seeds.exs --no-start",
-      "ecto.setup": ["ecto.create", "ecto.migrate", "ecto.seed"]
+      "ecto.setup": ["ecto.create", "ecto.migrate", "ecto.seed"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end
