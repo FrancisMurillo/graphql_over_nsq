@@ -11,10 +11,10 @@ defmodule TransactionService.TransactionItem do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "transaction_items" do
-    field :product_id, :binary_id
+    field(:product_id, :binary_id)
 
-    field :price, :float
-    field :quantity, :float
+    field(:price, :float)
+    field(:quantity, :float)
 
     belongs_to(:transaction, Transaction, type: :binary_id, foreign_key: :transaction_id)
 
@@ -29,14 +29,17 @@ defmodule TransactionService.TransactionItem do
     |> Changeset.validate_required(fields)
     |> validate_product(:product_id)
     |> validate_quantity(:quantity)
-    |> Changeset.unique_constraint(:product_id, name: :transaction_items_transaction_id_product_id_index)
+    |> Changeset.unique_constraint(:product_id,
+      name: :transaction_items_transaction_id_product_id_index
+    )
   end
 
   def validate_product(changeset, field) do
     if changeset.valid? do
-      product = changeset
-      |> Changeset.fetch_change!(:product_id)
-      |> ProductClient.get_by_id()
+      product =
+        changeset
+        |> Changeset.fetch_change!(:product_id)
+        |> ProductClient.get_by_id()
 
       if product do
         price = Map.get(product, :price, 0)

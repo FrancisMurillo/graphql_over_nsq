@@ -13,7 +13,7 @@ defmodule TransactionService.Schema do
     field(:message, non_null(:string), description: "Error description")
   end
 
-  object :transaction do
+  object :user_transaction do
     description("User transactions")
 
     field(:id, non_null(:id), description: "Transaction ID")
@@ -42,6 +42,15 @@ defmodule TransactionService.Schema do
   end
 
   query do
+    field :user_transactions, non_null(list_of(non_null(:user_transaction))) do
+      description("User transaction")
+
+      arg(:user_id, non_null(:id), description: "User Id")
+
+      resolve(fn _, %{user_id: user_id}, _ ->
+        {:ok, TransactionService.get_all_user_transactions(user_id)}
+      end)
+    end
   end
 
   mutation do
@@ -54,7 +63,7 @@ defmodule TransactionService.Schema do
       end
 
       output do
-        field(:transaction, :transaction, description: "Newly created transaction")
+        field(:transaction, :user_transaction, description: "Newly created transaction")
 
         field :errors, non_null(list_of(non_null(:field_error))) do
           description("Mutation errors")

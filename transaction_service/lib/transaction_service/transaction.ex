@@ -15,7 +15,6 @@ defmodule TransactionService.Transaction do
     field(:user_id, :binary_id)
 
     field(:code, :string)
-    field(:total_price, :float)
 
     has_many(:items, TransactionItem)
 

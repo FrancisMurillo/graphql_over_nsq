@@ -31,7 +31,7 @@ defmodule AccountService.Schema do
 
     field :user, :user do
       description("Get user by email")
-      arg :email, non_null(:string), description: "User email"
+      arg(:email, non_null(:string), description: "User email")
 
       resolve(fn _, %{email: email}, _ ->
         {:ok, AccountService.get_by_email(email)}

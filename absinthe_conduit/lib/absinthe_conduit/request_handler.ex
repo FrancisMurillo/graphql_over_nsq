@@ -31,7 +31,7 @@ defmodule Absinthe.Conduit.RequestHandler do
             Absinthe.Logger.log_run(:info, {
               query,
               schema(),
-              nil,
+              %{variables: variables, context: context},
               []
             })
 
@@ -44,15 +44,14 @@ defmodule Absinthe.Conduit.RequestHandler do
             |> broker().publish(response_topic())
             |> case do
               {:ok, _} ->
-                   Logger.info("Responsed to #{id} message")
+                Logger.info("Responsed to #{id} message")
 
               _ ->
                 Logger.info("Could not publish #{id}/#{response_topic()} message")
             end
 
           changeset ->
-               Logger.info("Invalid message for #{response_topic()}")
-
+            Logger.info("Invalid message for #{response_topic()}")
         end
 
         message

@@ -24,10 +24,11 @@ defmodule ApiGatewayWeb.Context do
     |> Conn.get_req_header("authorization")
     |> List.first()
     |> case do
-         "Bearer " <> email ->
-           AccountClient.get_by_email(email)
+      "Bearer " <> email ->
+        AccountClient.get_by_email(email)
 
-         _ -> nil
-       end
+      _ ->
+        nil
+    end
   end
 end

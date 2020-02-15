@@ -36,15 +36,15 @@ defmodule TransactionService.TranslateErrors do
 
       message =
         cond do
-        is_map(v) ->
-          v |> Map.values()
+          is_map(v) ->
+            v |> Map.values()
 
-        is_list(v) ->
-          v |> List.first() |> Map.values()
+          is_list(v) ->
+            v |> List.first() |> Map.values()
 
-        true ->
-          v
-      end
+          true ->
+            v
+        end
         |> List.wrap()
         |> List.first()
 

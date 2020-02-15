@@ -23,7 +23,7 @@ defmodule ProductService.Schema do
 
     field :product, :product do
       description("Get product by ID")
-      arg :id, non_null(:id), description: "Product Id"
+      arg(:id, non_null(:id), description: "Product Id")
 
       resolve(fn _, %{id: id}, _ ->
         {:ok, ProductService.get_by_id(id)}
