@@ -14,7 +14,6 @@ defmodule AccountService.Broker do
   end
 
   configure do
-    queue("account_graphql_request")
     queue("account_graphql_response")
   end
 

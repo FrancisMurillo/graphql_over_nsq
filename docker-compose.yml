@@ -30,6 +30,7 @@ services:
     command: "mix run --no-halt"
     entrypoint: /opt/app/account_service/docker-entrypoint.sh
     volumes:
+      - ./absinthe_conduit:/opt/app/absinthe_conduit
       - ./account_service:/opt/app/account_service
       - account_mix_build:/opt/app/_build
       - account_rebar_cache:/opt/app/.cache
@@ -54,6 +55,7 @@ services:
     command: "mix run --no-halt"
     entrypoint: /opt/app/product_service/docker-entrypoint.sh
     volumes:
+      - ./absinthe_conduit:/opt/app/absinthe_conduit
       - ./product_service:/opt/app/product_service
       - product_mix_build:/opt/app/_build
       - product_rebar_cache:/opt/app/.cache
@@ -78,6 +80,7 @@ services:
     command: "mix phx.server"
     entrypoint: /opt/app/api_gateway/docker-entrypoint.sh
     volumes:
+      - ./absinthe_conduit:/opt/app/absinthe_conduit
       - ./api_gateway:/opt/app/api_gateway
       - api_mix_build:/opt/app/_build
       - api_rebar_cache:/opt/app/.cache
@@ -90,7 +93,6 @@ services:
       - nsq:nsq
     environment:
       NSQ_HOST: "nsq:14150"
-
 
 volumes:
   db:

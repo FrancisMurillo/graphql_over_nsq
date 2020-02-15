@@ -36,6 +36,7 @@ defmodule ApiGateway.MixProject do
       {:conduit, "~> 0.12.10"},
       {:absinthe, "~> 1.4.0"},
       {:absinthe_relay, "~> 1.4.0"},
+      {:absinthe_conduit, path: "../absinthe_conduit"},
       {:absinthe_plug, "~> 1.4.7"}
     ]
   end

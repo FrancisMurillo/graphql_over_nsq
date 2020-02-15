@@ -31,6 +31,7 @@ defmodule ProductService.MixProject do
       {:conduit, "~> 0.12.10"},
       {:absinthe, "~> 1.4.0"},
       {:absinthe_relay, "~> 1.4.0"},
+      {:absinthe_conduit, path: "../absinthe_conduit"},
       {:ex_machina, "~> 2.3.0"},
       {:faker, "~> 0.13.0"}
     ]

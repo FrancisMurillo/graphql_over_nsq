@@ -1,4 +1,4 @@
-defmodule Json do
+defmodule Absinthe.Conduit.Json do
   use Conduit.Encoding
 
   alias Jason

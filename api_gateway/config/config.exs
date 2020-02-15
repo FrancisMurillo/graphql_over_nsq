@@ -1,7 +1,7 @@
 import Config
 
 config :conduit, Conduit.Encoding, [
-  {"json", Json}
+  {"json", Absinthe.Conduit.Json}
 ]
 
 config :logger, :console,

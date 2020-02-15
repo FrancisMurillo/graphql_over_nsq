@@ -14,7 +14,6 @@ defmodule ProductService.Broker do
   end
 
   configure do
-    queue("product_graphql_request")
     queue("product_graphql_response")
   end
 
