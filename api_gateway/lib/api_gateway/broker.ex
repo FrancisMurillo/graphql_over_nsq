@@ -39,7 +39,7 @@ defmodule ApiGateway.Broker do
     subscribe(
       :transaction_graphql_response,
       TransactionGraphQLResponse,
-      topic: "product_graphql_response",
+      topic: "transaction_graphql_response",
       channel: @channel
     )
   end

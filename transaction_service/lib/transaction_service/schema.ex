@@ -3,7 +3,7 @@ defmodule TransactionService.Schema do
   use Absinthe.Relay.Schema, :modern
 
   alias TransactionService
-  alias TransactionService.{TranslateErrors}
+  alias TransactionService.{ParseContext, TranslateErrors}
 
   object :field_error do
     description("An user-readable error")
@@ -47,6 +47,7 @@ defmodule TransactionService.Schema do
   mutation do
     payload field(:create_transaction) do
       description("Create transaction")
+      middleware(ParseContext)
 
       input do
         field(:items, list_of(:create_transaction_item), description: "Items")
@@ -62,7 +63,7 @@ defmodule TransactionService.Schema do
         end
       end
 
-      resolve(fn _, args, %{context: %{"user_id" => user_id}} ->
+      resolve(fn _, args, %{context: %{current_user: %{id: user_id}} = context} ->
         case TransactionService.create_transaction(user_id, args) do
           {:ok, transaction} -> %{transaction: transaction, errors: []}
           {:error, changeset} -> %{transaction: nil, errors: changeset}

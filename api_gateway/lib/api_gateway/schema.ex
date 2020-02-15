@@ -2,10 +2,10 @@ defmodule ApiGateway.Schema do
   use Absinthe.Schema
   use Absinthe.Relay.Schema, :modern
 
-  alias Absinthe.{Middleware, Resolution}
+  alias Absinthe.{Resolution}
   alias Absinthe.Blueprint.Document.Field
 
-  alias ApiGateway.{AccountClient, ProductClient}
+  alias ApiGateway.{AccountClient, ProductClient, TransactionClient, Authenticated}
 
   object :field_error do
     description("An user-readable error")
@@ -48,8 +48,8 @@ defmodule ApiGateway.Schema do
 
     field(:id, non_null(:id), description: "Transaction ID")
 
-    field(:price, non_null(:price), description: "Transaction price")
-    field(:quantity, non_null(:quantity), description: "Transaction quantity")
+    field(:price, non_null(:float), description: "Transaction price")
+    field(:quantity, non_null(:float), description: "Transaction quantity")
   end
 
   input_object :create_transaction_item do
@@ -187,13 +187,14 @@ defmodule ApiGateway.Schema do
 
     payload field(:create_transaction) do
       description("Create transaction")
+      middleware(Authenticated)
 
       input do
         field(:items, non_null(list_of(non_null(:create_transaction_item))), description: "Items" )
       end
 
       output do
-        field(:transaction, :transaction, description: "Newly created transaction")
+        field(:transaction, :user_transaction, description: "Newly created transaction")
 
         field(:errors, non_null(list_of(non_null(:field_error))), description: "Mutation errors")
       end
@@ -211,8 +212,10 @@ defmodule ApiGateway.Schema do
             }
           }
           """,
-          args
+          args,
+          res.context
         )
+        |> IO.inspect
         |> case do
           {:ok, %{"data" => %{"createTransaction" => create_transaction}}} ->
             {:ok, create_transaction}

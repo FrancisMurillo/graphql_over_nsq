@@ -28,6 +28,15 @@ defmodule AccountService.Schema do
         {:ok, AccountService.get_users()}
       end
     )
+
+    field :user, :user do
+      description("Get user by email")
+      arg :email, non_null(:string), description: "User email"
+
+      resolve(fn _, %{email: email}, _ ->
+        {:ok, AccountService.get_by_email(email)}
+      end)
+    end
   end
 
   mutation do
