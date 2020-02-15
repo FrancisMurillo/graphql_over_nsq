@@ -47,6 +47,30 @@ services:
       DB_PASS: "mq_pass"
       DB_NAME: "mq_db"
       NSQ_HOST: "nsq:14150"
+  product_service:
+    build:
+      context: ./product_service
+      dockerfile: Dockerfile
+    command: "mix run --no-halt"
+    entrypoint: /opt/app/product_service/docker-entrypoint.sh
+    volumes:
+      - ./product_service:/opt/app/product_service
+      - product_mix_build:/opt/app/_build
+      - product_rebar_cache:/opt/app/.cache
+      - product_mix_deps:/opt/app/product_service/deps
+    depends_on:
+      - db
+      - nsq
+    links:
+      - nsq:nsq
+      - db:db
+    environment:
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_USER: "mq_user"
+      DB_PASS: "mq_pass"
+      DB_NAME: "mq_db"
+      NSQ_HOST: "nsq:14150"
   api_gateway:
     build:
       context: ./api_gateway
@@ -73,6 +97,9 @@ volumes:
   account_mix_deps:
   account_mix_build:
   account_rebar_cache:
+  product_mix_deps:
+  product_mix_build:
+  product_rebar_cache:
   api_mix_deps:
   api_mix_build:
   api_rebar_cache:

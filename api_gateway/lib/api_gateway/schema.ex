@@ -5,7 +5,7 @@ defmodule ApiGateway.Schema do
   alias Absinthe.{Middleware, Resolution}
   alias Absinthe.Blueprint.Document.Field
 
-  alias ApiGateway.{AccountClient}
+  alias ApiGateway.{AccountClient, ProductClient}
 
   object :field_error do
     description("An user-readable error")
@@ -22,6 +22,15 @@ defmodule ApiGateway.Schema do
     field(:email, non_null(:string), description: "User email")
     field(:first_name, non_null(:string), description: "User first name")
     field(:last_name, non_null(:string), description: "User last name")
+  end
+
+  object :product do
+    description("Products of this wonderful platform")
+
+    field(:id, non_null(:id), description: "Product ID")
+    field(:code, non_null(:string), description: "Product email")
+    field(:name, non_null(:string), description: "Product first name")
+    field(:price, non_null(:float), description: "Product last name")
   end
 
   def middleware(middleware, %{identifier: identifier} = field, object) do
@@ -84,6 +93,25 @@ defmodule ApiGateway.Schema do
         end
       end)
     end
+
+    field :products, non_null(list_of(non_null(:product))) do
+      resolve(fn _, _, res ->
+        ProductClient.run("""
+        query {
+          products {
+        #{to_field_query(res.definition.selections)}
+          }
+        }
+        """)
+        |> case do
+          {:ok, %{"data" => %{"products" => products}}} ->
+            {:ok, products}
+
+          error ->
+            error
+        end
+      end)
+    end
   end
 
   mutation do
@@ -121,7 +149,6 @@ defmodule ApiGateway.Schema do
           """,
           args
         )
-        |> IO.inspect(label: "RA")
         |> case do
           {:ok, %{"data" => %{"registerUser" => register_user}}} ->
             {:ok, register_user}

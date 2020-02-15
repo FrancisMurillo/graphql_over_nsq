@@ -1,18 +1,7 @@
 defmodule ProductService do
-  @moduledoc """
-  Documentation for ProductService.
-  """
+  alias ProductService.{Repo, Product}
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ProductService.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def get_products() do
+    Repo.all(Product)
   end
 end

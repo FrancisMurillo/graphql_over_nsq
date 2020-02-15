@@ -3,7 +3,7 @@ defmodule AccountService.Schema do
   use Absinthe.Relay.Schema, :modern
 
   alias AccountService
-  alias AccountService.{Repo, TranslateErrors, User}
+  alias AccountService.{TranslateErrors}
 
   object :field_error do
     description("An user-readable error")
@@ -25,7 +25,7 @@ defmodule AccountService.Schema do
   query do
     field(:users, non_null(list_of(non_null(:user))),
       resolve: fn _, _, _ ->
-        {:ok, Repo.all(User)}
+        {:ok, AccountService.get_users()}
       end
     )
   end

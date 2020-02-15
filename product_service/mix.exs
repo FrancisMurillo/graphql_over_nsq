@@ -7,11 +7,11 @@ defmodule ProductService.MixProject do
       version: "0.1.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger],
@@ -19,11 +19,28 @@ defmodule ProductService.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:uuid, "~> 1.1.8", app: false, runtime: false, override: true},
+      {:ecto, "~> 3.3.2"},
+      {:ecto_sql, "~> 3.3.2"},
+      {:postgrex, "~> 0.15.3"},
+      {:jason, "~> 1.1.0"},
+      {:elixir_nsq, "~> 1.1.0"},
+      {:conduit_nsq, "~> 0.1.4"},
+      {:conduit, "~> 0.12.10"},
+      {:absinthe, "~> 1.4.0"},
+      {:absinthe_relay, "~> 1.4.0"},
+      {:ex_machina, "~> 2.3.0"},
+      {:faker, "~> 0.13.0"}
+    ]
+  end
+
+  defp aliases do
+    [
+      "ecto.seed": "run priv/repo/seeds.exs --no-start",
+      "ecto.setup": ["ecto.create", "ecto.migrate", "ecto.seed"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end

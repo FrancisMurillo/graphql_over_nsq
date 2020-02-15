@@ -15,8 +15,13 @@ defmodule ApiGateway.Broker do
 
   configure do
     queue("account_graphql_request")
+    queue("account_graphql_response")
+
     queue("billing_graphql_request")
+    queue("billing_graphql_response")
+
     queue("product_graphql_request")
+    queue("product_graphql_response")
   end
 
   incoming ApiGateway do
@@ -28,11 +33,19 @@ defmodule ApiGateway.Broker do
       topic: "account_graphql_response",
       channel: @channel
     )
+
+    subscribe(
+      :product_graphql_response,
+      ProductGraphQLResponse,
+      topic: "product_graphql_response",
+      channel: @channel
+    )
   end
 
   outgoing do
     pipe_through([:serialize])
 
     publish(:account_graphql_request, topic: "account_graphql_request")
+    publish(:product_graphql_request, topic: "product_graphql_request")
   end
 end
