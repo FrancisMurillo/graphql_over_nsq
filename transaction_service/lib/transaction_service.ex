@@ -1,18 +1,9 @@
 defmodule TransactionService do
-  @moduledoc """
-  Documentation for TransactionService.
-  """
+  alias TransactionService.{Repo, Transaction}
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> TransactionService.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def create_transaction(user_id, args) do
+    %Transaction{}
+    |> Transaction.create_changeset(user_id, args)
+    |> Repo.insert()
   end
 end

@@ -33,6 +33,32 @@ defmodule ApiGateway.Schema do
     field(:price, non_null(:float), description: "Product last name")
   end
 
+  object :user_transaction do
+    description("User transactions")
+
+    field(:id, non_null(:id), description: "Transaction ID")
+
+    field(:code, non_null(:string), description: "Transaction code")
+
+    field(:items, non_null(list_of(non_null(:transaction_item))), description: "Transaction items")
+  end
+
+  object :transaction_item do
+    description("Transaction item")
+
+    field(:id, non_null(:id), description: "Transaction ID")
+
+    field(:price, non_null(:price), description: "Transaction price")
+    field(:quantity, non_null(:quantity), description: "Transaction quantity")
+  end
+
+  input_object :create_transaction_item do
+    description("Create transaction item")
+
+    field(:product_id, non_null(:id), description: "Item product ID")
+    field(:quantity, non_null(:float), description: "Item product quantiy")
+  end
+
   def middleware(middleware, %{identifier: identifier} = field, object) do
     field_name =
       identifier
@@ -138,8 +164,8 @@ defmodule ApiGateway.Schema do
           mutation($email: String!, $first_name: String!, $last_name: String!) {
             registerUser(
               input: {
-                email: $email,
-                firstName: $first_name,
+                email: $email
+                firstName: $first_name
                 lastName: $last_name
               }
             ) {
@@ -152,6 +178,44 @@ defmodule ApiGateway.Schema do
         |> case do
           {:ok, %{"data" => %{"registerUser" => register_user}}} ->
             {:ok, register_user}
+
+          error ->
+            error
+        end
+      end)
+    end
+
+    payload field(:create_transaction) do
+      description("Create transaction")
+
+      input do
+        field(:items, non_null(list_of(non_null(:create_transaction_item))), description: "Items" )
+      end
+
+      output do
+        field(:transaction, :transaction, description: "Newly created transaction")
+
+        field(:errors, non_null(list_of(non_null(:field_error))), description: "Mutation errors")
+      end
+
+      resolve(fn _, args, res ->
+        TransactionClient.run(
+          """
+          mutation($items: [CreateTransactionItem!]!) {
+            createTransaction(
+              input: {
+                items: $items
+              }
+            ) {
+          #{to_field_query(res.definition.selections)}
+            }
+          }
+          """,
+          args
+        )
+        |> case do
+          {:ok, %{"data" => %{"createTransaction" => create_transaction}}} ->
+            {:ok, create_transaction}
 
           error ->
             error

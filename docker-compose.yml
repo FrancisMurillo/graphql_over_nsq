@@ -73,6 +73,31 @@ services:
       DB_PASS: "mq_pass"
       DB_NAME: "mq_db"
       NSQ_HOST: "nsq:14150"
+  transaction_service:
+    build:
+      context: ./transaction_service
+      dockerfile: Dockerfile
+    command: "mix run --no-halt"
+    entrypoint: /opt/app/transaction_service/docker-entrypoint.sh
+    volumes:
+      - ./absinthe_conduit:/opt/app/absinthe_conduit
+      - ./transaction_service:/opt/app/transaction_service
+      - transaction_mix_build:/opt/app/_build
+      - transaction_rebar_cache:/opt/app/.cache
+      - transaction_mix_deps:/opt/app/transaction_service/deps
+    depends_on:
+      - db
+      - nsq
+    links:
+      - nsq:nsq
+      - db:db
+    environment:
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_USER: "mq_user"
+      DB_PASS: "mq_pass"
+      DB_NAME: "mq_db"
+      NSQ_HOST: "nsq:14150"
   api_gateway:
     build:
       context: ./api_gateway
@@ -102,6 +127,9 @@ volumes:
   product_mix_deps:
   product_mix_build:
   product_rebar_cache:
+  transaction_mix_deps:
+  transaction_mix_build:
+  transaction_rebar_cache:
   api_mix_deps:
   api_mix_build:
   api_rebar_cache:

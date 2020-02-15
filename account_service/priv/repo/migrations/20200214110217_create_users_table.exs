@@ -5,9 +5,9 @@ defmodule AccountService.Repo.Migrations.CreateUsersTable do
     create table(:users, primary_key: false) do
       add(:id, :binary_id, primary_key: true, autogenerate: true)
 
-      add(:email, :string)
-      add(:first_name, :string)
-      add(:last_name, :string)
+      add(:email, :string, null: false)
+      add(:first_name, :string, null: false)
+      add(:last_name, :string, null: false)
 
       timestamps()
     end

@@ -5,9 +5,9 @@ defmodule ProductService.Repo.Migrations.CreateProductsTable do
     create table(:products, primary_key: false) do
       add(:id, :binary_id, primary_key: true, autogenerate: true)
 
-      add(:code, :string)
-      add(:name, :string)
-      add(:price, :float)
+      add(:code, :string, null: false)
+      add(:name, :string, null: false)
+      add(:price, :float, null: false)
 
       timestamps()
     end

@@ -1,7 +1,7 @@
 defmodule ApiGateway.Application do
   use Application
 
-  alias ApiGateway.{Broker, AccountClient, ProductClient}
+  alias ApiGateway.{Broker, AccountClient, ProductClient, TransactionClient}
   alias ApiGatewayWeb.{Endpoint}
 
   def start(_type, _args) do
@@ -9,7 +9,8 @@ defmodule ApiGateway.Application do
       Broker,
       Endpoint,
       AccountClient,
-      ProductClient
+      ProductClient,
+      TransactionClient
     ]
 
     opts = [strategy: :one_for_one, name: ApiGateway.Supervisor]

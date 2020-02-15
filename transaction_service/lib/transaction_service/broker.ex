@@ -1,7 +1,7 @@
-defmodule ApiGateway.Broker do
-  use Conduit.Broker, otp_app: :api_gateway
+defmodule TransactionService.Broker do
+  use Conduit.Broker, otp_app: :transaction_service
 
-  @channel "api_gateway"
+  @channel "transaction_service"
 
   pipeline :serialize do
     plug(Conduit.Plug.Wrap)
@@ -14,18 +14,18 @@ defmodule ApiGateway.Broker do
   end
 
   configure do
-    queue("account_graphql_request")
+    queue("transaction_graphql_response")
+
     queue("product_graphql_request")
-    queue("transaction_graphql_request")
   end
 
-  incoming ApiGateway do
+  incoming TransactionService do
     pipe_through([:deserialize])
 
     subscribe(
-      :account_graphql_response,
-      AccountGraphQLResponse,
-      topic: "account_graphql_response",
+      :graphql_request,
+      GraphQLRequest,
+      topic: "transaction_graphql_request",
       channel: @channel
     )
 
@@ -35,20 +35,12 @@ defmodule ApiGateway.Broker do
       topic: "product_graphql_response",
       channel: @channel
     )
-
-    subscribe(
-      :transaction_graphql_response,
-      TransactionGraphQLResponse,
-      topic: "product_graphql_response",
-      channel: @channel
-    )
   end
 
   outgoing do
     pipe_through([:serialize])
 
-    publish(:account_graphql_request, topic: "account_graphql_request")
+    publish(:graphql_response, topic: "transaction_graphql_response")
     publish(:product_graphql_request, topic: "product_graphql_request")
-    publish(:transaction_graphql_request, topic: "transaction_graphql_request")
   end
 end
