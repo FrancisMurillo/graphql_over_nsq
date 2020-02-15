@@ -11,41 +11,48 @@ defmodule AccountService.GraphQLRequest do
 
   alias AccountService.{Broker, Schema}
 
-  def process(%Message{correlation_id: id, body: body} = message, _opts) when is_map(body)  do
+  def process(%Message{correlation_id: id, body: body} = message, _opts) when is_map(body) do
     Logger.info("Received #{id} request")
 
     types = %{query: :string, variables: :map, context: :map}
 
-    attrs = {%{}, types}
-    |> Changeset.cast(body, Map.keys(types))
-    |> Changeset.validate_required([:query])
-    |> case do
-         %Changeset{valid?: true} = changeset ->
-           data = Changeset.apply_changes(changeset)
+    attrs =
+      {%{}, types}
+      |> Changeset.cast(body, Map.keys(types))
+      |> Changeset.validate_required([:query])
+      |> case do
+        %Changeset{valid?: true} = changeset ->
+          data = Changeset.apply_changes(changeset)
 
-           query = Map.fetch!(data, :query)
-           variables = Map.get(data, :variables, %{})
-           context = Map.get(data, :context, %{})
+          query = Map.fetch!(data, :query)
+          variables = Map.get(data, :variables, %{})
+          context = Map.get(data, :context, %{})
 
-           {:ok, response} = Absinthe.run(query, Schema, variables: variables, context: context)
+          Absinthe.Logger.log_run(:info, {
+            query,
+            Schema,
+            nil,
+            []
+          })
 
-           %Message{}
-           |> Message.put_body(response)
-           |> Message.put_correlation_id(id)
-           |> Broker.publish(:graphql_response)
-           |> case do
-                {:ok, _} ->
-                  Logger.info("Sent #{id} response")
-                  :ok
+          {:ok, response} = Absinthe.run(query, Schema, variables: variables, context: context)
 
-                _ ->
-                  Logger.error("Could not send #{id} response at account_graphql_response")
-              end
+          %Message{}
+          |> Message.put_body(response)
+          |> Message.put_correlation_id(id)
+          |> Broker.publish(:graphql_response)
+          |> case do
+            {:ok, _} ->
+              Logger.info("Sent #{id} response")
+              :ok
 
-         changeset ->
-           Logger.error("GraphQL Error: #{inspect(changeset)}")
+            _ ->
+              Logger.error("Could not send #{id} response at account_graphql_response")
+          end
 
-       end
+        changeset ->
+          Logger.error("GraphQL Error: #{inspect(changeset)}")
+      end
 
     message
   end

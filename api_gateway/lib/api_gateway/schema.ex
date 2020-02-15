@@ -1,6 +1,9 @@
 defmodule ApiGateway.Schema do
   use Absinthe.Schema
 
+  alias Absinthe.{Middleware, Resolution}
+  alias Absinthe.Blueprint.Document.Field
+
   alias ApiGateway.{AccountClient}
 
   object :user do
@@ -12,29 +15,65 @@ defmodule ApiGateway.Schema do
     field(:last_name, non_null(:string), description: "User last name")
   end
 
+  def middleware(middleware, %{identifier: identifier} = field, object) do
+    field_name =
+      identifier
+      |> Atom.to_string()
+      |> Absinthe.Adapter.LanguageConventions.to_external_name(:field)
+
+    new_middleware_spec = {{__MODULE__, :get_field_key}, {field_name, identifier}}
+
+    Absinthe.Schema.replace_default(middleware, new_middleware_spec, field, object)
+  end
+
+  def get_field_key(%Resolution{source: source} = res, {key, fallback_key}) do
+    new_value =
+      case Map.fetch(source, key) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          Map.get(source, fallback_key)
+      end
+
+    %{res | state: :resolved, value: new_value}
+  end
+
+  def to_field_query(%Field{name: name, selections: []}),
+    do: name
+
+  def to_field_query(%Field{name: name, selections: inner_fields}) do
+    """
+    #{name} {
+    #{to_field_query(inner_fields)}
+    }
+    """
+  end
+
+  def to_field_query(fields) when is_list(fields) do
+    fields
+    |> Enum.map(&to_field_query/1)
+    |> Enum.join("\n")
+  end
+
   query do
-    field(:users, non_null(list_of(non_null(:user))),
-      resolve: fn _, _, _ ->
+    field :users, non_null(list_of(non_null(:user))) do
+      resolve(fn _, _, context ->
         AccountClient.run("""
         query {
           users {
-            id
-            email
-            firstName
-            lastName
+        #{to_field_query(context.definition.selections)}
           }
         }
         """)
         |> case do
-             {:ok, %{"data" => %{"users" => users}}} ->
-               users
-               |> Enum.map(&AtomicMap.convert/1)
-               |> (&{:ok, &1}).()
+          {:ok, %{"data" => %{"users" => users}}} ->
+            {:ok, users}
 
-             error ->
-               error
-           end
-      end
-    )
+          error ->
+            error
+        end
+      end)
+    end
   end
 end
