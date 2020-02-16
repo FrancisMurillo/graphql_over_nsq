@@ -19,6 +19,7 @@ defmodule AbsintheConduit.MixProject do
 
   defp deps do
     [
+      {:ecto, "~> 3.3.2"},
       {:conduit, "~> 0.12.10"},
       {:absinthe, "~> 1.4.0"},
       {:jason, "~> 1.1.0"},
