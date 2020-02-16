@@ -27,18 +27,18 @@ defmodule ApiGateway.Schema do
     field :transactions, non_null(list_of(non_null(:user_transaction))) do
       description("User transactions")
 
-      resolve(fn %{"_id" => id}, _, res ->
+      resolve(fn %{"id" => id}, _, res ->
         TransactionClient.run(
           """
           query($user_id: ID!) {
-            userTransactions(userId: $user_id) {
+            user_transactions(user_id: $user_id) {
               id
               code
               items {
                 id
+                product_id
                 price
                 quantity
-                _product_id: productId
               }
             }
           }
@@ -47,7 +47,7 @@ defmodule ApiGateway.Schema do
           res.context
         )
         |> case do
-          {:ok, %{"data" => %{"userTransactions" => user_transactions}}} ->
+          {:ok, %{"data" => %{"user_transactions" => user_transactions}}} ->
             {:ok, user_transactions}
 
           error ->
@@ -84,12 +84,15 @@ defmodule ApiGateway.Schema do
     field :product, non_null(:product) do
       description("Transaction product")
 
-      resolve(fn %{"_product_id" => product_id}, _, res ->
+      resolve(fn %{"product_id" => product_id}, _, res ->
         ProductClient.run(
           """
           query($id: ID!) {
             product(id: $id) {
-          #{to_field_query(res.definition.selections, [])}
+              id
+              code
+              name
+              price
             }
           }
           """,
@@ -118,10 +121,7 @@ defmodule ApiGateway.Schema do
   end
 
   def middleware(middleware, %{identifier: identifier} = field, object) do
-    field_name =
-      identifier
-      |> Atom.to_string()
-      |> Absinthe.Adapter.LanguageConventions.to_external_name(:field)
+    field_name = Atom.to_string(identifier)
 
     new_middleware_spec = {{__MODULE__, :get_field_key}, {field_name, identifier}}
 
@@ -141,35 +141,16 @@ defmodule ApiGateway.Schema do
     %{res | state: :resolved, value: new_value}
   end
 
-  def to_field_query(%Field{name: name, selections: []}, excluded_fields),
-    do: name
-
-  def to_field_query(%Field{name: name, selections: inner_fields}, excluded_fields) do
-    if name in excluded_fields do
-      ""
-    else
-      """
-      #{name} {
-      #{to_field_query(inner_fields, excluded_fields)}
-      }
-      """
-    end
-  end
-
-  def to_field_query(fields, excluded_fields) when is_list(fields) do
-    fields
-    |> Enum.map(fn field -> to_field_query(field, excluded_fields) end)
-    |> Enum.join("\n")
-  end
-
   query do
     field :users, non_null(list_of(non_null(:user))) do
       resolve(fn _, _, res ->
         AccountClient.run("""
         query {
           users {
-          _id: id
-        #{to_field_query(res.definition.selections, ["transactions"])}
+            id
+            email
+            first_name
+            last_name
           }
         }
         """)
@@ -188,7 +169,10 @@ defmodule ApiGateway.Schema do
         ProductClient.run("""
         query {
           products {
-        #{to_field_query(res.definition.selections, [])}
+            id
+            code
+            name
+            price
           }
         }
         """)
@@ -225,21 +209,30 @@ defmodule ApiGateway.Schema do
         AccountClient.run(
           """
           mutation($email: String!, $first_name: String!, $last_name: String!) {
-            registerUser(
+            register_user(
               input: {
                 email: $email
-                firstName: $first_name
-                lastName: $last_name
+                first_name: $first_name
+                last_name: $last_name
               }
             ) {
-          #{to_field_query(res.definition.selections, [])}
+              errors {
+                field
+                message
+              }
+              user {
+                id
+                email
+                first_name
+                last_name
+              }
             }
           }
           """,
           args
         )
         |> case do
-          {:ok, %{"data" => %{"registerUser" => register_user}}} ->
+          {:ok, %{"data" => %{"register_user" => register_user}}} ->
             {:ok, register_user}
 
           error ->
@@ -266,12 +259,25 @@ defmodule ApiGateway.Schema do
         TransactionClient.run(
           """
           mutation($items: [CreateTransactionItem!]!) {
-            createTransaction(
+            create_transaction(
               input: {
                 items: $items
               }
             ) {
-          #{to_field_query(res.definition.selections, [])}
+              errors {
+                field
+                message
+              }
+              transaction {
+                id
+                code
+                items {
+                  id
+                  product_id
+                  price
+                  quantity
+                }
+              }
             }
           }
           """,
@@ -279,7 +285,7 @@ defmodule ApiGateway.Schema do
           res.context
         )
         |> case do
-          {:ok, %{"data" => %{"createTransaction" => create_transaction}}} ->
+          {:ok, %{"data" => %{"create_transaction" => create_transaction}}} ->
             {:ok, create_transaction}
 
           error ->

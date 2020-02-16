@@ -11,8 +11,8 @@ defmodule ApiGateway.AccountClient do
       user(email: $email) {
         id
         email
-        firstName
-        lastName
+        first_name
+        last_name
       }
     }
     """

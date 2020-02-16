@@ -85,7 +85,7 @@ defmodule Absinthe.Conduit.Client do
       end
 
       defp response_timeout() do
-        :timer.seconds(15)
+        :timer.seconds(30)
       end
     end
   end

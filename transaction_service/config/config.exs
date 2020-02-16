@@ -1,5 +1,8 @@
 import Config
 
+config :absinthe,
+  adapter: Absinthe.Adapter.Passthrough
+
 config :conduit, Conduit.Encoding, [
   {"json", Absinthe.Conduit.Json}
 ]
