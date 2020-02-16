@@ -2,8 +2,31 @@ defmodule AccountService.Schema do
   use Absinthe.Schema
   use Absinthe.Relay.Schema, :modern
 
+  alias Absinthe.{Resolution}
+
   alias AccountService
   alias AccountService.{TranslateErrors}
+
+  def middleware(middleware, %{identifier: identifier} = field, object) do
+    field_name = Atom.to_string(identifier)
+
+    new_middleware_spec = {{__MODULE__, :get_field_key}, {field_name, identifier}}
+
+    Absinthe.Schema.replace_default(middleware, new_middleware_spec, field, object)
+  end
+
+  def get_field_key(%Resolution{source: source} = res, {key, fallback_key}) do
+    new_value =
+      case Map.fetch(source, key) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          Map.get(source, fallback_key)
+      end
+
+    %{res | state: :resolved, value: new_value}
+  end
 
   object :field_error do
     description("An user-readable error")

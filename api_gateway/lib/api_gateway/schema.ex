@@ -3,10 +3,29 @@ defmodule ApiGateway.Schema do
   use Absinthe.Relay.Schema, :modern
 
   alias Absinthe.{Resolution}
-  alias Absinthe.Blueprint.Document.Field
-  alias Absinthe.Middleware.PassParent
 
   alias ApiGateway.{AccountClient, ProductClient, TransactionClient, Authenticated}
+
+  def middleware(middleware, %{identifier: identifier} = field, object) do
+    field_name = Atom.to_string(identifier)
+
+    new_middleware_spec = {{__MODULE__, :get_field_key}, {field_name, identifier}}
+
+    Absinthe.Schema.replace_default(middleware, new_middleware_spec, field, object)
+  end
+
+  def get_field_key(%Resolution{source: source} = res, {key, fallback_key}) do
+    new_value =
+      case Map.fetch(source, key) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          Map.get(source, fallback_key)
+      end
+
+    %{res | state: :resolved, value: new_value}
+  end
 
   object :field_error do
     description("An user-readable error")
@@ -118,27 +137,6 @@ defmodule ApiGateway.Schema do
 
     field(:product_id, non_null(:id), description: "Item product ID")
     field(:quantity, non_null(:float), description: "Item product quantiy")
-  end
-
-  def middleware(middleware, %{identifier: identifier} = field, object) do
-    field_name = Atom.to_string(identifier)
-
-    new_middleware_spec = {{__MODULE__, :get_field_key}, {field_name, identifier}}
-
-    Absinthe.Schema.replace_default(middleware, new_middleware_spec, field, object)
-  end
-
-  def get_field_key(%Resolution{source: source} = res, {key, fallback_key}) do
-    new_value =
-      case Map.fetch(source, key) do
-        {:ok, value} ->
-          value
-
-        :error ->
-          Map.get(source, fallback_key)
-      end
-
-    %{res | state: :resolved, value: new_value}
   end
 
   query do

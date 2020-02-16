@@ -32,6 +32,9 @@ defmodule TransactionService.MixProject do
       {:absinthe, "~> 1.4.0"},
       {:absinthe_relay, "~> 1.4.0"},
       {:absinthe_conduit, path: "../absinthe_conduit"},
+      {:plug, "~> 1.9.0"},
+      {:plug_cowboy, "~> 2.1.2"},
+      {:absinthe_plug, "~> 1.4.7"},
       {:ex_machina, "~> 2.3.0"},
       {:faker, "~> 0.13.0"}
     ]
